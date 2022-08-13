@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const bcrypt=require('bcryptjs');
 const jwt=require('jsonwebtoken');
 const JWT_SECRET='rafay@awesome';
+const fetchuser=require('../middleware/fetchUser');
 //Create a User Using: POST Method "api/auth/createuser" no login required
 router.post('/createuser',[
     body('name','Enter Name').not().isEmpty(),
@@ -39,7 +40,7 @@ router.post('/createuser',[
  }
  catch(error){
   console.error(error.message);
-  res.status(500).send("Inernal Server Error")
+  res.status(500).send("Internal Server Error")
  }
 }
 );
@@ -73,7 +74,24 @@ router.post('/login',[
     }
     catch(error){
         console.error(error.message);
-        res.status(500).send("Inernal Server Error")
+        res.status(500).send("Internal Server Error")
+    }
+}
+);
+
+//Get User Using: POST Method "api/auth/getuser" Login required
+router.post('/getuser',fetchuser,async(req,res)=>{
+    try{
+        userId=req.user.id;
+        const user=await User.findById(userId).select('-password');
+        if(!user){
+            return res.status(400).json({errors:[{msg:'User Not Found'}]});
+        }
+        res.json(user);
+    }
+    catch(error){
+        console.error(error.message);
+        res.status(500).send("Internal Server Error")
     }
 }
 );
