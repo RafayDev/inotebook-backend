@@ -38,4 +38,33 @@ catch(error){
 }
 }
 );
+//update an existing note using: PUT Method "api/notes/updatenote" login required
+router.put('/updatenote/:id',fetchuser,async(req,res)=>{
+    const errors = validationResult(req);
+    try{
+    let note=await Notes.findOneAndUpdate({_id:req.params.id},{
+        title:req.body.title,
+        description:req.body.description,
+        tag:req.body.tag,
+        date:req.body.date
+    });
+   note=await Notes.findById(req.params.id);
+    res.send(note);
+}
+catch(error){
+    res.status(500).send("Internal Server Error")
+}
+}
+);
+//delete a note using: Delete Method "api/notes/deletenote" login required
+router.delete('/deletenote/:id',fetchuser,async(req,res)=>{
+    try{
+    const note=await Notes.findByIdAndDelete(req.params.id);
+    res.send({success:"Note has been Deleted"});
+}
+catch(error){
+    res.status(500).send("Internal Server Error")
+}
+}
+);
 module.exports=router;
