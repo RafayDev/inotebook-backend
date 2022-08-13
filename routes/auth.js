@@ -5,7 +5,7 @@ const { body, validationResult } = require('express-validator');
 const bcrypt=require('bcryptjs');
 const jwt=require('jsonwebtoken');
 const JWT_SECRET='rafay@awesome';
-//Create a User Using: POST Method "api/auth/createuser"
+//Create a User Using: POST Method "api/auth/createuser" no login required
 router.post('/createuser',[
     body('name','Enter Name').not().isEmpty(),
     body('email','Enter Valid Email').isEmail(),
@@ -39,8 +39,43 @@ router.post('/createuser',[
  }
  catch(error){
   console.error(error.message);
-  res.status(500).send("Some Error")
+  res.status(500).send("Inernal Server Error")
  }
 }
 );
+
+//Authenticate a User Using: POST Method "api/auth/login" no login required
+router.post('/login',[
+    body('email','Enter Valid Email').isEmail(),
+    body('password','Password Must be  6 lenght').isLength({min:6})
+],async(req,res)=>{
+    //if the validation is not passed
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    try{
+        let user=await User.findOne({email:req.body.email});
+        if(!user){
+            return res.status(400).json({errors:[{msg:'User Not Found'}]});
+        }
+        const isMatch=await bcrypt.compare(req.body.password,user.password);
+        if(!isMatch){
+            return res.status(400).json({errors:[{msg:'Invalid Password'}]});
+        }
+        const data={
+            user:{
+             id:user.id,
+            }
+        };
+        const authtoken=jwt.sign(data,JWT_SECRET);
+        res.json({authtoken:authtoken});
+    }
+    catch(error){
+        console.error(error.message);
+        res.status(500).send("Inernal Server Error")
+    }
+}
+);
+
 module.exports=router;
